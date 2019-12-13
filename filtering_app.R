@@ -42,9 +42,14 @@ ui <- fluidPage(
                       selected = samples, inline=TRUE),
    # Sidebar with a slider input for number of bins 
    fluidRow(
-     column(5, sliderInput("size_filter", "Select nucleus size range", min = min_size,
-                           max=max_size, value = c(min_size, max_size))),
-     column(7, plotlyOutput("nucleus_size_histogram"))
+     h4("Choose features to display"),
+     sidebarLayout(
+       sidebarPanel(
+         sliderInput("size_filter", "Select nucleus size range", min = min_size,
+                     max=max_size, value = c(min_size, max_size))
+       ),
+       mainPanel(plotlyOutput("nucleus_size_histogram"))
+     )
    ),
    fluidRow(
      column(5, sliderInput("af555cell_filter","Select AF555 cell range", min = min_af,
@@ -65,8 +70,8 @@ ui <- fluidPage(
      sidebarLayout(
        sidebarPanel(
          selectInput("ft1_choice","Choose feature 1 to plot", 
-                                choices = NULL, selected = NULL),
-       sliderInput("ft1_slider","Select feature range", min = 1, max = 10, value = 1)
+                                choices = c("Nucleus_Size")),
+       sliderInput("ft1_slider","Select feature range", min = 1, max = 10, value = c(1,2))
        ),
        mainPanel(
          plotlyOutput("ft1_hist")
@@ -130,43 +135,70 @@ server <- function(session,input, output) {
    })
    
   data_filtered <- reactive({
+    #req(input$ft1_choice)
+    c <- input$ft1_choice
     sample_data() %>% filter(Nucleus_Size > input$size_filter[1], 
                     Nucleus_Size < input$size_filter[2]) %>% 
         filter(AF555_Cell_Intensity_Average > input$af555cell_filter[1],
-                AF555_Cell_Intensity_Average < input$af555cell_filter[2]) #%>% 
-        # filter(Sample_ID %in% input$checkSamples)
+                AF555_Cell_Intensity_Average < input$af555cell_filter[2]) %>% 
+      filter(between(.[,input$ft1_choice] , input$ft1_slider[1], input$ft1_slider[2]))
+      #filter(input$ft1_choice > input$ft1_slider[1],
+       #      input$ft1_choice < input$ft1_slider[2])
    
   })
 
-   sample_data <- eventReactive(input$checkSamples,{
+   sample_data <- eventReactive(c(input$checkSamples,menu_choices()),{
       data() %>% filter(Sample_ID %in% input$checkSamples)
    })
   
+   #### Choose filter options ####
+
+   menu_choices <- eventReactive(data(),{
+     names(data()) %>% sort()
+   })
+   
+   observe({
+     updateSelectInput(session, "ft1_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     # repeat for remaining 7 features
+   })
+   
+   ### Update slider ranges
+   observe({
+     #req(sample_data())
+     min <- min(sample_data()$Nucleus_Size)
+     max <- max(sample_data()$Nucleus_Size)
+     updateSliderInput(session,"size_filter",
+                       min = min, max = max, value = c(min, max),
+     )
+   })
+   
+   # Reactive for AF555cell min
    #observeEvent(input$checkSamples, {
    #observeEvent(sampledata(),{
-    reactive({ 
-     #nuc_min <- min(sample_data()$Nucleus_Size)
-      #nuc_max <- max(sample_data()$Nucleus_Size)
-      af555_min <- min(data_filtered()$AF555_Cell_Intensity_Average)
-      af555_max <- max(data_filtered()$AF555_Cell_Intensity_Average)
-      #updateSliderInput(session,"size_filter",
-      #                  min = nuc_min, max = nuc_max, value = c(nuc_min, nuc_max),
-      #                     )
+    observe({ 
+      #req(sample_data())
+      min <- min(sample_data()$AF555_Cell_Intensity_Average)
+      max <- max(sample_data()$AF555_Cell_Intensity_Average)
       updateSliderInput(session,"af555cell_filter", 
-                        min = af555_min, max = af555_max, value = c(af555_min, af555_max))
+                        min = min, max = max, value = c(min, max))
   })
     
-    reactive({
-      nuc_min <- min(sample_data()$Nucleus_Size)
-      nuc_max <- max(sample_data()$Nucleus_Size)
-      updateSliderInput(session,"size_filter",
-                        min = nuc_min, max = nuc_max, value = c(nuc_min, nuc_max),
-      )
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft1_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft1_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft1_slider", 
+                        min = min, max = max, value = c(min, max))
     })
+    
+
   
- 
+    
    # Nucleus size histogram
    output$nucleus_size_histogram <- renderPlotly({
+     #req(data_filtered())
       g <- data_filtered() %>% ggplot(aes(x = Nucleus_Size)) +
          geom_histogram(aes(),fill = "Blue", color = "Blue", alpha = 0.6) + 
          geom_density(color = 'dodgerblue4') +
@@ -232,15 +264,15 @@ server <- function(session,input, output) {
      g
    })
    
-   # AF555 nuc histogram
+   # Ft 1 
    output$ft1_hist <- renderPlotly({
      g <- data_filtered() %>% 
        # ggplot(aes(x = AF555_nuc_Intensity_Average)) +
-       ggplot(aes(x = TP53_Cell_Intensity_Average)) +
+       ggplot(aes_string(x = input$ft1_choice)) +
        geom_histogram(aes(),fill = "Green", color = "firebrick", alpha = 0.6) + 
-       geom_density(color = 'darkred') +
-       labs(title = "FIX - Distribution of AF555 nucleus average intensity value", 
-            y = "Count", xlab = "AF555 nucleus average intensity") +
+       #geom_density(color = 'darkred') +
+       labs(title = paste0("Distribution of ",input$ft1_choice), 
+            y = "Count", xlab = input$ft1_choice) +
        theme(
          axis.line.y = element_line(colour = "black", size=0.5),
          axis.line.x =  element_line(color = "black", size = 0.5),
