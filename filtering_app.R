@@ -8,8 +8,6 @@ library(fivethirtyeight)
 library(plotly)
 
 ##load the biopics data
-#data(biopics)
-#biopics <- biopics %>% filter(!is.na(box_office))
 data <- read.csv("../r_shiny/repro_PCA_test.csv")
 data <- data %>% mutate('AF555_Cell_Intensity_Average' = round(AF555_Cell_Intensity_Average))
 
@@ -24,11 +22,10 @@ max_size <- max(data$Nucleus_Size)
 # AF 555
 min_af <- min(data$AF555_Cell_Intensity_Average)
 max_af <- max(data$AF555_Cell_Intensity_Average)
-# others...
 
 
 
-# Define UI for application that plots 
+
 ui <- fluidPage(
    
    # Application title
@@ -137,7 +134,7 @@ ui <- fluidPage(
   ),
 )
 
-##Server is where all of the computations happen
+
 server <- function(session,input, output) {
   
    data <- reactive({

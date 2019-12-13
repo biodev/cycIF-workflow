@@ -11,11 +11,11 @@ library(plotly)
 options(shiny.maxRequestSize = 3000*1024^2)
 
 ##load the PCA data
-data <- read.csv("repro_PCA_test.csv")
+#data <- read.csv("repro_PCA_test.csv")
 
 ## not intensities
-not_intensities <- read.csv("not_intensities.csv", header = 0)
-not_intensities <- not_intensities$V1 %>% as.character()
+#not_intensities <- read.csv("not_intensities.csv", header = 0)
+#not_intensities <- not_intensities$V1 %>% as.character()
 
 # get colors of samples
 if (file.exists("sample_color_data_repro.csv")){
@@ -51,32 +51,27 @@ get_pve <- function(pca_data) {
 
 # get metadata
 #metadata2 <- read.csv("more_metadata_for_PCA_test.csv") %>% mutate("treatment" = tolower(treatment))
-metadata <- read.csv("ROI_Map.csv")
-if ("TMA_column" %in% names(metadata)) {
-  metadata$TMA_column <- as.factor(metadata$TMA_column)
-}
-if ("Replicate" %in% names(metadata)) {
-  metadata$Replicate <- as.factor(metadata$Replicate)
-}
+#metadata <- read.csv("ROI_Map.csv")
+# if ("TMA_column" %in% names(metadata)) {
+#   metadata$TMA_column <- as.factor(metadata$TMA_column)
+# }
+# if ("Replicate" %in% names(metadata)) {
+#   metadata$Replicate <- as.factor(metadata$Replicate)
+# }
 
 # join PCA output and metadata
 #for_plot <- left_join(data, metadata, by = c("Sample_ID","ROI_index","ROI_slide")) %>% mutate("Sample_ID" = as.factor(Sample_ID))
 
 # select PCs plot color options
 #pcs_color_options <- names(for_plot[, !names(for_plot) %in% names(data)])
-pcs_color_options <- names(metadata)
-pcs_color_options <- c(pcs_color_options, "Sample_ID")
+#pcs_color_options <- names(metadata)
+#pcs_color_options <- c(pcs_color_options, "Sample_ID")
 
-#data(biopics)
-#biopics <- biopics %>% filter(!is.na(box_office))
-##specify what categories we want to color with
-#select_color_options <- c("type_of_subject", "subject_race", "subject_sex","year_release")
-#min_year <- min(biopics$year_release)
-#max_year <- max(biopics$year_release)
+
 
 ### Change this!!! ###
-m <- data %>% select(Sample_ID) %>% unique() %>% 
-  deframe() %>% as.character() %>% str_sort(numeric=TRUE)
+#m <- data %>% select(Sample_ID) %>% unique() %>% 
+#  deframe() %>% as.character() %>% str_sort(numeric=TRUE)
 
 
 # Define UI for application that plots 
@@ -89,7 +84,9 @@ ui <- fluidPage(
   fluidRow(
     column(3, fileInput("dataFile", "Choose data csv file to upload", accept = ".csv")),
     column(3, fileInput("metadataFile", "Choose metadata csv file to upload", accept = ".csv")),
-    column(3, fileInput("intensitiesFile", "Choose 'not_intensities.csv' file to upload", accept = ".csv"))
+    column(3, fileInput("intensitiesFile", "Choose 'not_intensities.csv' file to upload", accept = ".csv")),
+    column(3, fileInput("coloringFiles","Choose coloring information files to uplaod", accept = ".csv",
+                        multiple = TRUE))
   ),
   h3("PCA Parameters"),
   fluidRow(
@@ -142,7 +139,7 @@ ui <- fluidPage(
       h4("Plots (generated after running PCA)"),
       plotlyOutput("pcs_plot"),
       textOutput("scaleSampleSummary"),
-      textOutput("reactiveAttempt"),
+      #textOutput("reactiveAttempt"),
       plotlyOutput("pve_plot"),
       plotlyOutput("cum_pve_plot")
       #tableOutput("table")
@@ -156,7 +153,11 @@ server <- function(input, output, session) {
   data <- reactive({
     inFile <- input$dataFile
     if (is.null(inFile)) {
+      if (exists("repro_PCA_test.csv")) {
       d <- read.csv("repro_PCA_test.csv")
+      } else {
+        return(NULL)
+      }
     } else {
       d <- read.csv(inFile$datapath)
     }
@@ -190,13 +191,28 @@ server <- function(input, output, session) {
     return(d)
   })
   
+  sample_cols <- reactive({
+    #req(input$coloringFiles)
+      fileList <- input$coloringFiles
+      l <- list()
+      for (f in fileList$datapath) {
+        #d <- read.csv(f)
+        l <- c(l, list(f))
+      }
+      return(l)
+  }
+  )  
+  
   pcs_color_options <- eventReactive(metadata(),{
     d <- names(metadata())
     d <- c(d, "Sample_ID")
     d
   })
   
+  
+  
   samples <- eventReactive(data(),{
+    #req(input$dataFile)
     data() %>% select(Sample_ID) %>% unique() %>% 
       deframe() %>% as.character() %>% str_sort(numeric=TRUE)
   })
@@ -232,7 +248,7 @@ server <- function(input, output, session) {
     # object take a dependency on it. That means when
     # input$goButton changes, this code will re-execute.
     input$pcaButton
-    
+
     # input$text is accessed here, so this reactive object will
     # take a dependency on it. However, input$ is inside of
     # isolate(), so this reactive object will NOT take a
@@ -261,7 +277,6 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$pcaButton, {
-    tot_pcs <- 
     updateSliderInput(session, "x_axis_pc", min = 1,
                       max=dim(pca_data()$x)[2], value = 1, step = 1)
     updateSliderInput(session, "y_axis_pc", min = 1,
@@ -272,10 +287,9 @@ server <- function(input, output, session) {
   
   
   
-  #output$reactiveAttempt 
-  
   # Perform PCA
   pca_data <- eventReactive(input$pcaButton, {
+    #req(data())
     if (input$scaleButton == "scaled") {
       scaleBoolean <- TRUE
     } else { # need to make sure this is working right
@@ -305,8 +319,11 @@ server <- function(input, output, session) {
 
   
   # Test thingy for reactive here!
-  output$reactiveAttempt <- renderText({
-    paste('input$checkPCASamples are:',dim(pve()))})
+   output$reactiveAttempt <- renderText({
+     #paste('input$checkPCASamples are:',dim(pve()))
+     paste('reactive attempt',sample_cols())
+     
+     })
   
   # PCs plot
   output$pcs_plot <- renderPlotly({
@@ -362,10 +379,10 @@ server <- function(input, output, session) {
     
   })
   
-  # Table of selected dataset ----
-  output$table <- renderTable({
-    pve()
-  })
+  # # Table of selected dataset ----
+  # output$table <- renderTable({
+  #   pve()
+  # })
   
 }
 
