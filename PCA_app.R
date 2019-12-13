@@ -84,9 +84,9 @@ ui <- fluidPage(
   fluidRow(
     column(3, fileInput("dataFile", "Choose data csv file to upload", accept = ".csv")),
     column(3, fileInput("metadataFile", "Choose metadata csv file to upload", accept = ".csv")),
-    column(3, fileInput("intensitiesFile", "Choose 'not_intensities.csv' file to upload", accept = ".csv")),
-    column(3, fileInput("coloringFiles","Choose coloring information files to uplaod", accept = ".csv",
-                        multiple = TRUE))
+    column(3, fileInput("intensitiesFile", "Choose 'not_intensities.csv' file to upload", accept = ".csv"))#,
+    #column(3, fileInput("coloringFiles","Choose coloring information files to uplaod", accept = ".csv",
+                        #multiple = TRUE))
   ),
   h3("PCA Parameters"),
   fluidRow(
@@ -129,8 +129,8 @@ ui <- fluidPage(
       selectInput("pcs_color_opts","Select feature to color by",
                   choices = NULL),#, selected = 'xx'),
       
-      selectInput("staticInput","Old label", 
-                  choices = c('c1','c2','c3'), selected = 'c1')
+      #selectInput("staticInput","Old label", 
+      #            choices = c('c1','c2','c3'), selected = 'c1')
       
     ),
     
@@ -138,7 +138,7 @@ ui <- fluidPage(
     mainPanel(
       h4("Plots (generated after running PCA)"),
       plotlyOutput("pcs_plot"),
-      textOutput("scaleSampleSummary"),
+      #textOutput("scaleSampleSummary"),
       #textOutput("reactiveAttempt"),
       plotlyOutput("pve_plot"),
       plotlyOutput("cum_pve_plot")
@@ -191,17 +191,17 @@ server <- function(input, output, session) {
     return(d)
   })
   
-  sample_cols <- reactive({
-    #req(input$coloringFiles)
-      fileList <- input$coloringFiles
-      l <- list()
-      for (f in fileList$datapath) {
-        #d <- read.csv(f)
-        l <- c(l, list(f))
-      }
-      return(l)
-  }
-  )  
+  # sample_cols <- reactive({
+  #   #req(input$coloringFiles)
+  #     fileList <- input$coloringFiles
+  #     l <- list()
+  #     for (f in fileList$datapath) {
+  #       #d <- read.csv(f)
+  #       l <- c(l, list(f))
+  #     }
+  #     return(l)
+  # }
+  # )  
   
   pcs_color_options <- eventReactive(metadata(),{
     d <- names(metadata())

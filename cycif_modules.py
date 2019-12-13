@@ -223,7 +223,7 @@ def maintain_value_counts(df, col, count):
 def create_equal_value_counts(df, col, count):
     values = df[col].value_counts().sort_index()
     props = values/df.shape[0]
-    desired_rows = round((heatmap_row_count / len(df[col].unique())))
+    desired_rows = round((count / len(df[col].unique())))
     counts_df = pd.DataFrame({'current_row_count':values,'prop':props})
     counts_df['desired_row_count'] = counts_df.apply(lambda row: min(desired_rows, row['current_row_count']), axis = 1)
     return counts_df
@@ -268,12 +268,12 @@ def heatmap_function(title,
     
     #And now for the legends:
     # iterate through 'rows', 'cols'
-    for ann_type in annotations.keys():
+    for ann_type in sorted(annotations.keys()):
         # iterate through each individual annotation feature
         for ann in annotations[ann_type]:
             color_dict = ann['dict']
             handles = []
-            for item in color_dict.keys():
+            for item in sorted(color_dict.keys()):
                 h = g.ax_col_dendrogram.bar(0,0, color = color_dict[item], label = item,
                                            linewidth = 0)
                 handles.append(h)
