@@ -51,21 +51,23 @@ ui <- fluidPage(
        mainPanel(plotlyOutput("nucleus_size_histogram"))
      )
    ),
-   fluidRow(
-     column(5, sliderInput("af555cell_filter","Select AF555 cell range", min = min_af,
-                           max = max_af, value = c(min_af, max_af))),
-     column(7, plotlyOutput("af555cell_histogram"))
+   sidebarLayout(
+     sidebarPanel(
+       sliderInput("af555cell_filter","Select AF555 cell range", min = min_af,
+                              max = max_af, value = c(min_af, max_af))),
+     mainPanel(
+       plotlyOutput("af555cell_histogram"))
    ),
-   fluidRow(
-     column(5, sliderInput("af555cyto_filter","Select AF555 cytoplasm range", min = min_af,
-                           max = max_af, value = c(min_af, max_af))),
-     column(7, plotlyOutput("af555cyto_histogram"))
+   sidebarLayout(
+     sidebarPanel(sliderInput("af555cyto_filter","Select AF555 cytoplasm range", min = min_af,
+                              max = max_af, value = c(min_af, max_af))),
+     mainPanel(plotlyOutput("af555cyto_histogram"))
    ),
-   fluidRow(
-     column(5, sliderInput("af555nuc_filter","Select AF555 nucleus range", min = min_af,
-                           max = max_af, value = c(min_af, max_af))),
-     column(7, plotlyOutput("af555nuc_histogram"))
-   ),
+  sidebarLayout(
+    sidebarPanel(sliderInput("af555nuc_filter","Select AF555 nucleus range", min = min_af,
+                             max = max_af, value = c(min_af, max_af))),
+    mainPanel(plotlyOutput("af555nuc_histogram"))
+  ),
    fluidRow(
      sidebarLayout(
        sidebarPanel(
@@ -73,51 +75,66 @@ ui <- fluidPage(
                                 choices = c("Nucleus_Size")),
        sliderInput("ft1_slider","Select feature range", min = 1, max = 10, value = c(1,2))
        ),
-       mainPanel(
-         plotlyOutput("ft1_hist")
-       )
+       mainPanel(plotlyOutput("ft1_hist"))
      )
-     
    ),
-   sidebarLayout(
-      sidebarPanel(
-        
-        sliderInput("af555nucleus_filter","Select AF555 nucleus range", min = min_af,
-                    max = max_af, value = c(min_af, max_af)),
-        sliderInput("af555cytoplasm_filter","Select AF555 cytoplasm range", min = min_af,
-                    max = max_af, value = c(min_af, max_af)),
-        # sliderInput("ft1_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft2_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft3_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft4_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft5_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft6_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        # sliderInput("ft7_filter", min = NULL,
-        #             max = NULL, value = NULL),
-        sliderInput("ft8_filter", label = NULL, min = 1,
-                    max = 10, value = c(2, 3))
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-         
-         
-         
-         plotlyOutput("ft2_hist"),
-         plotlyOutput("ft3_hist"),
-         plotlyOutput("ft4_hist"),
-         plotlyOutput("ft5_hist"),
-         plotlyOutput("ft6_hist"),
-         plotlyOutput("ft7_hist"),
-         plotlyOutput("ft8_hist")
-      )
-   )
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft2_choice","Choose feature 2 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft2_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft2_hist"))
+  ),
+
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft3_choice","Choose feature 3 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft3_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft3_hist"))
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft4_choice","Choose feature 4 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft4_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft4_hist"))
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft5_choice","Choose feature 5 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft5_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft5_hist"))
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft6_choice","Choose feature 6 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft6_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft6_hist"))
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft7_choice","Choose feature 7 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft7_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft7_hist"))
+  ),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("ft8_choice","Choose feature 8 to plot", 
+                  choices = c("Nucleus_Size")),
+      sliderInput("ft8_slider","Select feature range", min = 1, max = 10, value = c(1,2))
+    ),
+    mainPanel(plotlyOutput("ft8_hist"))
+  ),
 )
 
 ##Server is where all of the computations happen
@@ -135,15 +152,20 @@ server <- function(session,input, output) {
    })
    
   data_filtered <- reactive({
-    #req(input$ft1_choice)
-    c <- input$ft1_choice
+
     sample_data() %>% filter(Nucleus_Size > input$size_filter[1], 
                     Nucleus_Size < input$size_filter[2]) %>% 
         filter(AF555_Cell_Intensity_Average > input$af555cell_filter[1],
                 AF555_Cell_Intensity_Average < input$af555cell_filter[2]) %>% 
-      filter(between(.[,input$ft1_choice] , input$ft1_slider[1], input$ft1_slider[2]))
-      #filter(input$ft1_choice > input$ft1_slider[1],
-       #      input$ft1_choice < input$ft1_slider[2])
+      # issue with string literal, so couldn't do filter with input$X as column name
+      filter(between(.[,input$ft1_choice] , input$ft1_slider[1], input$ft1_slider[2])) %>% 
+      filter(between(.[,input$ft2_choice] , input$ft2_slider[1], input$ft2_slider[2])) %>% 
+      filter(between(.[,input$ft3_choice] , input$ft3_slider[1], input$ft3_slider[2])) %>% 
+      filter(between(.[,input$ft4_choice] , input$ft4_slider[1], input$ft4_slider[2])) %>% 
+      filter(between(.[,input$ft5_choice] , input$ft5_slider[1], input$ft5_slider[2])) %>% 
+      filter(between(.[,input$ft6_choice] , input$ft6_slider[1], input$ft6_slider[2])) %>% 
+      filter(between(.[,input$ft7_choice] , input$ft7_slider[1], input$ft7_slider[2])) %>% 
+      filter(between(.[,input$ft8_choice] , input$ft8_slider[1], input$ft8_slider[2])) 
    
   })
 
@@ -161,7 +183,27 @@ server <- function(session,input, output) {
      updateSelectInput(session, "ft1_choice",
                        choices = menu_choices(),
                        selected = NULL)
-     # repeat for remaining 7 features
+     updateSelectInput(session, "ft2_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft3_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft4_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft5_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft6_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft7_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
+     updateSelectInput(session, "ft8_choice",
+                       choices = menu_choices(),
+                       selected = NULL)
    })
    
    ### Update slider ranges
@@ -193,6 +235,54 @@ server <- function(session,input, output) {
                         min = min, max = max, value = c(min, max))
     })
     
+    observe({
+      min <- sample_data() %>% select(input$ft2_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft2_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft2_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    
+    observe({
+      min <- sample_data() %>% select(input$ft3_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft3_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft3_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft4_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft4_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft4_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft5_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft5_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft5_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft6_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft6_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft6_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft7_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft7_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft7_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
+    observe({
+      #input$ft1_choice
+      min <- sample_data() %>% select(input$ft8_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
+      max <- sample_data() %>% select(input$ft8_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      updateSliderInput(session,"ft8_slider", 
+                        min = min, max = max, value = c(min, max))
+    })
 
   
     
@@ -267,12 +357,120 @@ server <- function(session,input, output) {
    # Ft 1 
    output$ft1_hist <- renderPlotly({
      g <- data_filtered() %>% 
-       # ggplot(aes(x = AF555_nuc_Intensity_Average)) +
        ggplot(aes_string(x = input$ft1_choice)) +
-       geom_histogram(aes(),fill = "Green", color = "firebrick", alpha = 0.6) + 
-       #geom_density(color = 'darkred') +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
        labs(title = paste0("Distribution of ",input$ft1_choice), 
             y = "Count", xlab = input$ft1_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   
+   # Ft 2
+   output$ft2_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft2_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft2_choice), 
+            y = "Count", xlab = input$ft2_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   
+   # Ft 3
+   output$ft3_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft3_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft3_choice), 
+            y = "Count", xlab = input$ft3_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   
+   # Ft 4
+   output$ft4_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft4_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft4_choice), 
+            y = "Count", xlab = input$ft4_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   
+   # Ft 5
+   output$ft5_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft5_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft5_choice), 
+            y = "Count", xlab = input$ft5_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   
+   # Ft 6
+   output$ft6_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft6_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft6_choice), 
+            y = "Count", xlab = input$ft6_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   # Ft 7
+   output$ft7_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft7_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft7_choice), 
+            y = "Count", xlab = input$ft2_choice) +
+       theme(
+         axis.line.y = element_line(colour = "black", size=0.5),
+         axis.line.x =  element_line(color = "black", size = 0.5),
+         panel.background = element_rect(fill = "white",
+                                         colour = "white",
+                                         size = 0.5, linetype = "solid"))
+     g
+   })
+   # Ft 8
+   output$ft8_hist <- renderPlotly({
+     g <- data_filtered() %>% 
+       ggplot(aes_string(x = input$ft8_choice)) +
+       geom_histogram(aes(),fill = "dodgerblue2", color = "dodgerblue4", alpha = 0.6) + 
+       labs(title = paste0("Distribution of ",input$ft8_choice), 
+            y = "Count", xlab = input$ft8_choice) +
        theme(
          axis.line.y = element_line(colour = "black", size=0.5),
          axis.line.x =  element_line(color = "black", size = 0.5),
