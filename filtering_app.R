@@ -32,12 +32,12 @@ ui <- fluidPage(
    titlePanel("CycIF Workflow: Filtering"),
    
    fileInput("dataFile", "Choose data csv file to upload", accept = ".csv"),
-   # change this...
+   fluidRow(column(8,
    checkboxGroupInput(inputId = "checkSamples", label ="Choose samples to display in plots", 
                       choiceNames = samples,
                       choiceValues = samples,
-                      selected = samples, inline=TRUE),
-   # Sidebar with a slider input for number of bins 
+                      selected = samples, inline=TRUE)),
+   column(4,fluidRow(actionButton("goButton", "Go!")))), 
    fluidRow(
      h4("Choose features to display"),
      sidebarLayout(
@@ -48,6 +48,7 @@ ui <- fluidPage(
        mainPanel(plotlyOutput("nucleus_size_histogram"))
      )
    ),
+   
    sidebarLayout(
      sidebarPanel(
        sliderInput("af555cell_filter","Select AF555 cell range", min = min_af,
@@ -166,9 +167,24 @@ server <- function(session,input, output) {
    
   })
 
-   sample_data <- eventReactive(c(input$checkSamples,menu_choices()),{
+   sample_data <- eventReactive(input$goButton,{
       data() %>% filter(Sample_ID %in% input$checkSamples)
    })
+   
+   samples <- eventReactive(data(),{
+     #req(input$dataFile)
+     data() %>% select(Sample_ID) %>% unique() %>% 
+       deframe() %>% as.character() %>% str_sort(numeric=TRUE)
+   })
+   
+   observeEvent(samples(),{
+     updateCheckboxGroupInput(session, 
+                              inputId = "checkSamples", 
+                              choiceNames = samples(), # should be set once we have data
+                              choiceValues = samples(), # should be set once we have data
+                              selected = samples(), inline = TRUE)
+   })
+   
   
    #### Choose filter options ####
 
@@ -317,6 +333,7 @@ server <- function(session,input, output) {
 
    # AF555 cyto histogram
    output$af555cyto_histogram <- renderPlotly({
+     if ("AF555_Cytoplasm_Intensity_Average" %in% names(data_filtered())) {
      g <- data_filtered() %>% 
        #ggpot(aes(aes(x = AF555_Cytoplsm_Intensity_Average)) +
        ggplot(aes(x = Rad51_Cell_Intensity_Average)) +
@@ -330,14 +347,17 @@ server <- function(session,input, output) {
          panel.background = element_rect(fill = "white",
                                          colour = "white",
                                          size = 0.5, linetype = "solid"))
-     g
+     g}
+     else {
+       return(NULL)}
    })
    
    # AF555 nuc histogram
    output$af555nuc_histogram <- renderPlotly({
+     if ("AF555_Nucleus_Intensity_Average" %in% names(data_filtered())) {
      g <- data_filtered() %>% 
       # ggplot(aes(x = AF555_nuc_Intensity_Average)) +
-       ggplot(aes(x = TP53_Cell_Intensity_Average)) +
+       ggplot(aes(x = AF555_Nucleus_Intensity_Average)) +
        geom_histogram(aes(),fill = "Green", color = "firebrick", alpha = 0.6) + 
        geom_density(color = 'darkred') +
        labs(title = "FIX - Distribution of AF555 nucleus average intensity value", 
@@ -348,7 +368,10 @@ server <- function(session,input, output) {
          panel.background = element_rect(fill = "white",
                                          colour = "white",
                                          size = 0.5, linetype = "solid"))
-     g
+     g}
+     else{
+       return(NULL)
+     }
    })
    
    # Ft 1 
