@@ -18,12 +18,12 @@ options(shiny.maxRequestSize = 3000*1024^2)
 #not_intensities <- not_intensities$V1 %>% as.character()
 
 # get colors of samples
-if (file.exists("sample_color_data_repro.csv")){
-  sample_colors <- read.csv("sample_color_data_repro.csv")
+if (file.exists("sample_color_data.csv")){
+  sample_colors <- read.csv("sample_color_data.csv")
   sample_cols <- as.character(sample_colors$hex)
   names(sample_cols) <- sample_colors$Sample_ID
 }
-# get colors of 
+
 
 ## perform PCA 
 # scaled vs unscaled

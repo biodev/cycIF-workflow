@@ -20,6 +20,17 @@ import plotly
 import plotly.graph_objs as go
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 
+
+"""
+This function compares two lists of values and returns
+which values are present in one and not the other and 
+vice versa by comparing them. It takes in a string
+"name" identifier and an object "actual" object corresponding
+to the actual headers in a dataframe. "expected" is an 
+object corresponding to the header values we expect to 
+see. Results are printed to console and nothing is 
+returned.
+"""
 def compare_headers(expected, actual, name):
     missing_actual = np.setdiff1d(expected, actual)
     extra_actual = np.setdiff1d(actual, expected)
@@ -51,7 +62,6 @@ a list of items not to be considered as markers when evaluating column names
 (not_markers) to be in memory. It also requires a desired output location of
 the files (output_dir) to already be in memory. 
 """
-
 
 
 def make_distr_plot_per_sample(title, location, dfs, df_names, colors, 
@@ -227,6 +237,28 @@ def create_equal_value_counts(df, col, count):
     counts_df = pd.DataFrame({'current_row_count':values,'prop':props})
     counts_df['desired_row_count'] = counts_df.apply(lambda row: min(desired_rows, row['current_row_count']), axis = 1)
     return counts_df
+
+
+def create_subset(df, col, count, ratio):
+    if ratio not in ['equal','original']:
+        print("'ratio' must be either 'equal' or 'original'")
+        print('Exiting...')
+        return None
+    count = min(count, df.shape[0])
+    if ratio == 'original':
+        print('here')
+        counts_df = maintain_value_counts(df, col, count)
+    else:
+        counts_df = create_equal_value_counts(df, col, count)
+    subset_df = pd.DataFrame(columns = df.columns)
+
+    for c in df[col].unique():
+        a = counts_df.loc[counts_df.index == c,'current_row_count'].values[0]
+        size = int(counts_df.loc[counts_df.index == c,'desired_row_count'].values[0])
+        random_rows = np.random.choice(a = a, size = size, replace = False)
+        df_sample = df.loc[df[col] == c,:]
+        subset_df = subset_df.append(df_sample.iloc[random_rows,:])
+    return subset_df
 
 def heatmap_function(title,
             data,
