@@ -4,7 +4,6 @@
 
 library(shiny)
 library(tidyverse)
-library(fivethirtyeight)
 library(gplots)
 library(ggfortify)
 library(plotly)

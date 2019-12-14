@@ -4,7 +4,6 @@
 
 library(shiny)
 library(tidyverse)
-library(fivethirtyeight)
 library(plotly)
 
 ##load the biopics data
