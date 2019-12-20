@@ -1,22 +1,19 @@
 ## Megan Grout
-## 20191211
+## 20191219
 ## PCA app for CycIF workflow
 
+# Load libraries
 library(shiny)
 library(tidyverse)
 library(gplots)
 library(ggfortify)
 library(plotly)
+
+# Adjust maximum file size allowable, but large files not recommended
 options(shiny.maxRequestSize = 3000*1024^2)
 
-##load the PCA data
-#data <- read.csv("repro_PCA_test.csv")
 
-## not intensities
-#not_intensities <- read.csv("not_intensities.csv", header = 0)
-#not_intensities <- not_intensities$V1 %>% as.character()
-
-# get colors of samples
+# get colors of samples - file must be in same directory as R file
 if (file.exists("sample_color_data.csv")){
   sample_colors <- read.csv("sample_color_data.csv")
   sample_cols <- as.character(sample_colors$hex)
@@ -24,20 +21,21 @@ if (file.exists("sample_color_data.csv")){
 }
 
 
-## perform PCA 
-# scaled vs unscaled
-#pr.out <- prcomp(as.matrix(data[, !names(data) %in% not_intensities]), scale = F)
-
+# Get length of dataframe
 length_function <- function(d) {
-  
   return(dim(d)[1])
 }
 
+# Perform PCA
+# takes in data.frame d, Boolean for scaling scaleBool, and not_intensities
+# Returns prcomp object
 perform_PCA <- function(d, scaleBool, not_intensities) {
   pr.out <- prcomp(as.matrix(d[, !names(d) %in% not_intensities]), scale = scaleBool)
   return(pr.out)
 }
 
+# Get proportion of variance explained by each PC
+# Takes in prcomp object
 get_pve <- function(pca_data) {
   pve <- pca_data$sdev^2/sum(pca_data$sdev^2) 
   pve <-  pve %>% data.frame()
@@ -47,33 +45,7 @@ get_pve <- function(pca_data) {
   }
 
 
-
-# get metadata
-#metadata2 <- read.csv("more_metadata_for_PCA_test.csv") %>% mutate("treatment" = tolower(treatment))
-#metadata <- read.csv("ROI_Map.csv")
-# if ("TMA_column" %in% names(metadata)) {
-#   metadata$TMA_column <- as.factor(metadata$TMA_column)
-# }
-# if ("Replicate" %in% names(metadata)) {
-#   metadata$Replicate <- as.factor(metadata$Replicate)
-# }
-
-# join PCA output and metadata
-#for_plot <- left_join(data, metadata, by = c("Sample_ID","ROI_index","ROI_slide")) %>% mutate("Sample_ID" = as.factor(Sample_ID))
-
-# select PCs plot color options
-#pcs_color_options <- names(for_plot[, !names(for_plot) %in% names(data)])
-#pcs_color_options <- names(metadata)
-#pcs_color_options <- c(pcs_color_options, "Sample_ID")
-
-
-
-### Change this!!! ###
-#m <- data %>% select(Sample_ID) %>% unique() %>% 
-#  deframe() %>% as.character() %>% str_sort(numeric=TRUE)
-
-
-# Define UI for application that plots 
+# UI information 
 ui <- fluidPage(
   
   # Application title
@@ -84,6 +56,8 @@ ui <- fluidPage(
     column(3, fileInput("dataFile", "Choose data csv file to upload", accept = ".csv")),
     column(3, fileInput("metadataFile", "Choose metadata csv file to upload", accept = ".csv")),
     column(3, fileInput("intensitiesFile", "Choose 'not_intensities.csv' file to upload", accept = ".csv"))#,
+    # Futher development could have multiple coloring information files input here
+    # I was unable to get this to work within the constraints of the project
     #column(3, fileInput("coloringFiles","Choose coloring information files to uplaod", accept = ".csv",
                         #multiple = TRUE))
   ),
@@ -111,11 +85,8 @@ ui <- fluidPage(
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
-      ## Add User Interface element here
-      
       ## PCA options ##
       h4("Plotting Parameters"),
-
 
       ## Final PCs plot options ##
       # Y-axis PC number
@@ -126,29 +97,23 @@ ui <- fluidPage(
                   max=NULL, value = 1, step = 1), # max will be set to toal #PCs after PCA
       # Color
       selectInput("pcs_color_opts","Select feature to color by",
-                  choices = NULL),#, selected = 'xx'),
-      
-      #selectInput("staticInput","Old label", 
-      #            choices = c('c1','c2','c3'), selected = 'c1')
-      
+                  choices = NULL)
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
       h4("Plots (generated after running PCA)"),
       plotlyOutput("pcs_plot"),
-      #textOutput("scaleSampleSummary"),
-      #textOutput("reactiveAttempt"),
       plotlyOutput("pve_plot"),
       plotlyOutput("cum_pve_plot")
-      #tableOutput("table")
     )
   )
 )
 
-##Server is where all of the computations happen
+## Server information
 server <- function(input, output, session) {
   
+  # Get raw data
   data <- reactive({
     inFile <- input$dataFile
     if (is.null(inFile)) {
@@ -163,13 +128,15 @@ server <- function(input, output, session) {
     return(d)
   })
   
+  # Get metadata
   metadata <- reactive({
     inFile <- input$metadataFile
     if (is.null(inFile)) {
-      d <- read.csv("ROI_Map.csv")
+      d <- read.csv("metadata.csv")
     } else {
       d <- read.csv(inFile$datapath)
     }
+    # Recode various columns as factors
     if ("TMA_column" %in% names(d)){
       d$TMA_column <- as.factor(d$TMA_column)
     }
@@ -179,6 +146,7 @@ server <- function(input, output, session) {
     return(d)
   })
   
+  # Get not_intensities
   not_intensities <- reactive({
     inFile <- input$intensitiesFile
     if (is.null(inFile)) {
@@ -190,32 +158,21 @@ server <- function(input, output, session) {
     return(d)
   })
   
-  # sample_cols <- reactive({
-  #   #req(input$coloringFiles)
-  #     fileList <- input$coloringFiles
-  #     l <- list()
-  #     for (f in fileList$datapath) {
-  #       #d <- read.csv(f)
-  #       l <- c(l, list(f))
-  #     }
-  #     return(l)
-  # }
-  # )  
-  
+  # Get color options for PC plot
   pcs_color_options <- eventReactive(metadata(),{
     d <- names(metadata())
     d <- c(d, "Sample_ID")
     d
   })
   
-  
-  
+  # Determine samples in data
   samples <- eventReactive(data(),{
     #req(input$dataFile)
     data() %>% select(Sample_ID) %>% unique() %>% 
       deframe() %>% as.character() %>% str_sort(numeric=TRUE)
   })
   
+  # Use samples() to update sample checkbox
   observeEvent(samples(),{
     updateCheckboxGroupInput(session, 
                              inputId = "checkPCASamples", 
@@ -232,30 +189,16 @@ server <- function(input, output, session) {
   
   # Check which samples to process
   output$PCASamples <- renderPrint({ input$checkPCASamples })
-
+  
+  # Download PC data
   output$downloadPCA <- downloadHandler(
     filename = function() {
-      paste("PCA_data", ".csv", sep = "")
+      paste("PCA_output_data", ".csv", sep = "")
     },
     content = function(file) {
       write.csv(pca_data()$x, file, row.names = TRUE)
     }
   )
-  
-  output$scaleSampleSummary <- renderText({
-    # Simply accessing input$goButton here makes this reactive
-    # object take a dependency on it. That means when
-    # input$goButton changes, this code will re-execute.
-    input$pcaButton
-
-    # input$text is accessed here, so this reactive object will
-    # take a dependency on it. However, input$ is inside of
-    # isolate(), so this reactive object will NOT take a
-    # dependency on it; changes to input$n will therefore not
-    # trigger re-execution.
-    paste0('input$scaleButton is: "', isolate(input$scaleButton),
-      '", and input$checkPCASamples is: "', isolate(input$checkPCASamples),'"')
-  })
   
   # update PC color options select widget
   # when metadataFile changes
@@ -267,14 +210,7 @@ server <- function(input, output, session) {
                     selected = 'Sample_ID')
   })
   
-  # Update 
-  observeEvent(input$pcaButton,{
-    updateSelectInput(session, "staticInput", label = "New label", 
-                      #choices = pcs_color_options,
-                      choices = c('c4','c5','c6'),
-                      selected = 'c5')
-  })
-  
+  # Update PC plot display parameter options
   observeEvent(input$pcaButton, {
     updateSliderInput(session, "x_axis_pc", min = 1,
                       max=dim(pca_data()$x)[2], value = 1, step = 1)
@@ -285,16 +221,14 @@ server <- function(input, output, session) {
   })
   
   
-  
   # Perform PCA
   pca_data <- eventReactive(input$pcaButton, {
     #req(data())
     if (input$scaleButton == "scaled") {
       scaleBoolean <- TRUE
-    } else { # need to make sure this is working right
+    } else { 
       scaleBoolean <- FALSE
     }
-    
     d <- data() %>% filter(Sample_ID %in% input$checkPCASamples)
     perform_PCA(d, scaleBoolean, not_intensities())
   })
@@ -317,13 +251,6 @@ server <- function(input, output, session) {
   }
 
   
-  # Test thingy for reactive here!
-   output$reactiveAttempt <- renderText({
-     #paste('input$checkPCASamples are:',dim(pve()))
-     paste('reactive attempt',sample_cols())
-     
-     })
-  
   # PCs plot
   output$pcs_plot <- renderPlotly({
     p <- autoplot(pca_data(), data = for_plot(), x = input$x_axis_pc, y = input$y_axis_pc, 
@@ -331,20 +258,19 @@ server <- function(input, output, session) {
              #colour = NULL,
              main = paste('PC',input$y_axis_pc,' by PC', input$x_axis_pc,
                           ' colored by ',input$pcs_color_opts, sep = "")) +  
-      #scale_color_manual(values = cols) + 
       theme(
         axis.line.y = element_line(colour = "black", size=0.5),
         axis.line.x =  element_line(color = "black", size = 0.5),
         panel.background = element_rect(fill = "white",
                                         colour = "white",
                                         size = 0.5, linetype = "solid"))
-    if (input$pcs_color_opts == 'Sample_ID') {
+    # If we successfully input sample color information, use that to color points
+    # when 'Sample_ID' is selected.
+    if ((input$pcs_color_opts == 'Sample_ID') && (exists('sample_cols'))) {
       p <- p + scale_color_manual(values = sample_cols)
     }
     p
   })
-  
-  
 
   
   # PVE plot
@@ -353,7 +279,6 @@ server <- function(input, output, session) {
       labs(title = "Variance explained by each PC", 
            x = "Principal component",y = "Variance explained (%)") +
       scale_x_continuous(breaks=seq(0,pve()$PC[dim(pve())[1]],5)) +
-      
       theme(
         axis.line.y = element_line(colour = "black", size=0.5),
         axis.line.x =  element_line(color = "black", size = 0.5),
@@ -362,6 +287,7 @@ server <- function(input, output, session) {
                                         size = 0.5, linetype = "solid"))
     
   })
+  
   # Cumulative PVE plot 
   output$cum_pve_plot <- renderPlotly({
     ggplot(pve(), aes(x = PC, y = cumsum(pve()$PVE))) + geom_line() + geom_point() +
@@ -378,10 +304,6 @@ server <- function(input, output, session) {
     
   })
   
-  # # Table of selected dataset ----
-  # output$table <- renderTable({
-  #   pve()
-  # })
   
 }
 
