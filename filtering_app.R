@@ -1,27 +1,18 @@
 # Megan Grout
-# 20191211
+# 20191219
 # CycIF: Filtering dashboard
 
+# Necessary libraries
 library(shiny)
 library(tidyverse)
 library(plotly)
 
-##load the biopics data
-data <- read.csv("../r_shiny/repro_PCA_test.csv")
-data <- data %>% mutate('AF555_Cell_Intensity_Average' = round(AF555_Cell_Intensity_Average))
+## Load the data
+data <- read.csv("for_filtering_app.csv")
+
 
 samples <-  data %>% select(Sample_ID) %>% unique() %>% 
    deframe() %>% as.character() %>% str_sort(numeric=TRUE)
-
-
-## Filtering values ##
-# Nucleus size
-min_size <- min(data$Nucleus_Size)
-max_size <- max(data$Nucleus_Size)
-# AF 555
-min_af <- min(data$AF555_Cell_Intensity_Average)
-max_af <- max(data$AF555_Cell_Intensity_Average)
-
 
 
 
@@ -41,8 +32,8 @@ ui <- fluidPage(
      h4("Choose features to display"),
      sidebarLayout(
        sidebarPanel(
-         sliderInput("size_filter", "Select nucleus size range", min = min_size,
-                     max=max_size, value = c(min_size, max_size))
+         sliderInput("size_filter", "Select nucleus size range", min = 1,
+                     max=10, value = c(1, 10))
        ),
        mainPanel(plotlyOutput("nucleus_size_histogram"))
      )
@@ -50,19 +41,19 @@ ui <- fluidPage(
    
    sidebarLayout(
      sidebarPanel(
-       sliderInput("af555cell_filter","Select AF555 cell range", min = min_af,
-                              max = max_af, value = c(min_af, max_af))),
+       sliderInput("af555cell_filter","Select AF555 cell range", min = 1,
+                              max = 10, value = c(1, 10))),
      mainPanel(
        plotlyOutput("af555cell_histogram"))
    ),
    sidebarLayout(
-     sidebarPanel(sliderInput("af555cyto_filter","Select AF555 cytoplasm range", min = min_af,
-                              max = max_af, value = c(min_af, max_af))),
+     sidebarPanel(sliderInput("af555cyto_filter","Select AF555 cytoplasm range", min = 1,
+                              max = 10, value = c(1, 10))),
      mainPanel(plotlyOutput("af555cyto_histogram"))
    ),
   sidebarLayout(
-    sidebarPanel(sliderInput("af555nuc_filter","Select AF555 nucleus range", min = min_af,
-                             max = max_af, value = c(min_af, max_af))),
+    sidebarPanel(sliderInput("af555nuc_filter","Select AF555 nucleus range", min = 1,
+                             max = 10, value = c(1, 10))),
     mainPanel(plotlyOutput("af555nuc_histogram"))
   ),
    fluidRow(
@@ -140,7 +131,7 @@ server <- function(session,input, output) {
    data <- reactive({
       inFile <- input$dataFile
       if (is.null(inFile)) {
-         d <- read.csv("../r_shiny/repro_PCA_test.csv")
+         d <- read.csv("for_filtering_app.csv")
       } else {
          d <- read.csv(inFile$datapath)
       }
@@ -241,57 +232,57 @@ server <- function(session,input, output) {
     
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft1_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft1_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft1_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft1_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft1_slider", 
                         min = min, max = max, value = c(min, max))
     })
     
     observe({
-      min <- sample_data() %>% select(input$ft2_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft2_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft2_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft2_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft2_slider", 
                         min = min, max = max, value = c(min, max))
     })
     
     observe({
-      min <- sample_data() %>% select(input$ft3_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft3_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft3_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft3_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft3_slider", 
                         min = min, max = max, value = c(min, max))
     })
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft4_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft4_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft4_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft4_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft4_slider", 
                         min = min, max = max, value = c(min, max))
     })
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft5_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft5_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft5_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft5_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft5_slider", 
                         min = min, max = max, value = c(min, max))
     })
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft6_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft6_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft6_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft6_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft6_slider", 
                         min = min, max = max, value = c(min, max))
     })
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft7_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft7_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft7_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft7_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft7_slider", 
                         min = min, max = max, value = c(min, max))
     })
     observe({
       #input$ft1_choice
-      min <- sample_data() %>% select(input$ft8_choice) %>% min() %>% round()#min(sample_data()$ft1_name()) 
-      max <- sample_data() %>% select(input$ft8_choice) %>% max() %>% round() #max(sample_data()$ft1_name())
+      min <- sample_data() %>% select(input$ft8_choice) %>% min() %>% round() 
+      max <- sample_data() %>% select(input$ft8_choice) %>% max() %>% round() 
       updateSliderInput(session,"ft8_slider", 
                         min = min, max = max, value = c(min, max))
     })
@@ -300,7 +291,7 @@ server <- function(session,input, output) {
     
    # Nucleus size histogram
    output$nucleus_size_histogram <- renderPlotly({
-     #req(data_filtered())
+     if ("Nucleus_Size" %in% names(data_filtered())) {
       g <- data_filtered() %>% ggplot(aes(x = Nucleus_Size)) +
          geom_histogram(aes(),fill = "Blue", color = "Blue", alpha = 0.6) + 
          geom_density(color = 'dodgerblue4') +
@@ -311,11 +302,15 @@ server <- function(session,input, output) {
             panel.background = element_rect(fill = "white",
                                             colour = "white",
                                             size = 0.5, linetype = "solid"))
-      g
+      g}
+     else {
+       return(NULL)
+     }
          })
    
    # AF555 cell histogram
    output$af555cell_histogram <- renderPlotly({
+     if ("AF555_Cell_Intensity_Average" %in% names(data_filtered())) {
       g <- data_filtered() %>% ggplot(aes(x = AF555_Cell_Intensity_Average)) +
          geom_histogram(aes(),fill = "Red", color = "firebrick", alpha = 0.6) + 
          geom_density(color = 'darkred') +
@@ -327,15 +322,17 @@ server <- function(session,input, output) {
             panel.background = element_rect(fill = "white",
                                             colour = "white",
                                             size = 0.5, linetype = "solid"))
-      g
+      g}
+     else{
+       return(NULL)
+     }
    })
 
    # AF555 cyto histogram
    output$af555cyto_histogram <- renderPlotly({
      if ("AF555_Cytoplasm_Intensity_Average" %in% names(data_filtered())) {
      g <- data_filtered() %>% 
-       #ggpot(aes(aes(x = AF555_Cytoplsm_Intensity_Average)) +
-       ggplot(aes(x = Rad51_Cell_Intensity_Average)) +
+       ggplot(aes(x = AF555_Cytoplasm_Intensity_Average)) +
        geom_histogram(aes(),fill = "Green", color = "firebrick", alpha = 0.6) + 
        geom_density(color = 'darkred') +
        labs(title = "FIX - Distribution of AF555 cyto average intensity value", 
@@ -355,11 +352,10 @@ server <- function(session,input, output) {
    output$af555nuc_histogram <- renderPlotly({
      if ("AF555_Nucleus_Intensity_Average" %in% names(data_filtered())) {
      g <- data_filtered() %>% 
-      # ggplot(aes(x = AF555_nuc_Intensity_Average)) +
        ggplot(aes(x = AF555_Nucleus_Intensity_Average)) +
        geom_histogram(aes(),fill = "Green", color = "firebrick", alpha = 0.6) + 
        geom_density(color = 'darkred') +
-       labs(title = "FIX - Distribution of AF555 nucleus average intensity value", 
+       labs(title = "Distribution of AF555 nucleus average intensity value", 
             y = "Count", xlab = "AF555 nucleus average intensity") +
        theme(
          axis.line.y = element_line(colour = "black", size=0.5),
