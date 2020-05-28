@@ -1,5 +1,5 @@
-# Megan Grout
-# 20191219
+# Megan Grout groutm2020@alumni.ohsu.edu
+# 20200527
 # CycIF: Filtering dashboard
 
 # Necessary libraries

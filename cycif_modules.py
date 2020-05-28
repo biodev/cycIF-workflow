@@ -1,12 +1,12 @@
 # CycIF Modules
 #
-# Megan Grout groutm@ohsu.edu
+# Megan Grout groutm2020@alumni.ohsu.edu
 #
-# These functions were developed for use in the
-# CycIF workflow.
+# These functions were developed for use in the CycIF workflow,
+# which was developed based off of the scripts written by
+# Dr. Marilyne Labrie and Nick Kendsersky.
 #
-# Last updated: 20191217
-
+# Last updated: 20200527
 
 # Import neccessary libraries
 import os
