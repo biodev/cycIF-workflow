@@ -17,7 +17,7 @@ The workflow is composed of four Python Jupyter Notebooks and two R Shiny apps. 
 3) `log2_z-score.ipynb`
 4) `KMeans.ipynb`
 
-
+Please note that the R Shiny apps are less flexible than the Python code in terms of required input data location, structure, and labeling.
 
 ## Licensing
 
