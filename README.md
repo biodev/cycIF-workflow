@@ -1,7 +1,3 @@
-[//]: This is a comment test [![License: GPL v3](pic https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[//]: This is a comment test [![DOI:](https://zenodo.org/)]()
-
-
 # Cyclic Immunofluorescence Workflow
 
 ## Introduction
@@ -21,4 +17,4 @@ Please note that the R Shiny apps are less flexible than the Python code in term
 
 ## Licensing
 
-TBD
+Please see LICENSE file.
